@@ -52,7 +52,7 @@ class Player(Entity):
     
   def do_fire(self, objects):
     if self.fire_dt > 1000000 / self.FIRE_RATE:
-      shell = Shell()
+      shell = Shell(-self.move_v * self.SPEED)
       shell.scale_factor = 1.75
       shell.setSprite(self.shell_texture)
       shell.sprite.position = self.sprite.position

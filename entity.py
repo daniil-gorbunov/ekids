@@ -1,7 +1,11 @@
 from sfml import sf
+from params import draw_bbox
 
 
 class Entity(sf.TransformableDrawable):
+  collides_with = None
+  collision_class = None
+  
   def __init__(self):
     self.global_bbox_rect = sf.RectangleShape()
     self.global_bbox_rect.outline_color = sf.Color.GREEN
@@ -15,8 +19,9 @@ class Entity(sf.TransformableDrawable):
     
     self.scale_factor = 1
     self.pool = []
+    self.is_dead = False
     
-    self.draw_bbox = False
+    self.draw_bbox = draw_bbox
     
     super(sf.TransformableDrawable, self).__init__()
     
@@ -37,3 +42,5 @@ class Entity(sf.TransformableDrawable):
       self.global_bbox_rect.position = (bbox.left, bbox.top,)
       self.global_bbox_rect.size = (bbox.width, bbox.height,)
       target.draw(self.global_bbox_rect)
+
+  def register_hit(self, obj): pass

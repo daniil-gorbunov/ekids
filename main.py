@@ -1,8 +1,11 @@
 from sfml import sf
 from round_robin import RoundRobin
 from entity import Entity
+from enemy import Enemy
 from player import Player
 from parallaxe_bg import ParallaxeBackground
+from util import rect_intersect
+import params
 import time
 
 RES_WIDTH = 480
@@ -47,27 +50,41 @@ player = Player(ship_off_texture)
 player.shell_texture = shell_texture
 player.active_texture = ship_on_texture
 player.sprite.position = (RES_WIDTH / 2, RES_HEIGHT / 2)
-
-ufo1 = Entity()
-ufo1.scale_factor = 0.5
-ufo1.setSprite(ufo_texture)
-ufo1.sprite.position = (200, 100,)
+objects.append(player)
 
 px_shift = 0
 px_speed = -0.0013
 dt = 0
 
+
+def place_enemy(pos):
+  ufo1 = Enemy()
+  ufo1.scale_factor = 0.5
+  ufo1.setSprite(ufo_texture)
+  ufo1.sprite.position = pos
+  objects.append(ufo1)
+
+
+place_enemy((100, 100))
+place_enemy((300, 100))
+
+
 while window.is_open:
+  # CLOCK
   if clock.elapsed_time.microseconds < 2500:
     time.sleep(0.00005)
     continue
-  
+
+  # EVENTS  
   frames_time.add(dt)
   for event in window.events:
       if event == sf.Event.CLOSED:
           window.close()
-          
+
+  # INPUT
   if sf.Keyboard.is_key_pressed(sf.Keyboard.R):
+    place_enemy((100, 100))
+    place_enemy((300, 100))
     player.sprite.position = (RES_WIDTH / 2, RES_HEIGHT / 2)
 
   if sf.Keyboard.is_key_pressed(sf.Keyboard.UP):
@@ -84,25 +101,31 @@ while window.is_open:
     
   if sf.Keyboard.is_key_pressed(sf.Keyboard.SPACE):
     player.do_fire(objects)
-  
-  player.update(dt)
-  
+   
+  # UPDATE
+  for obj in objects:
+    if obj.is_dead:
+      objects.remove(obj)
+    obj.update(dt)
+ 
+
+  for objA in objects:
+    if objA.collides_with is not None:
+      for objB in objects:
+        if objA.collides_with and objA.collides_with == objB.collision_class:
+          if rect_intersect(objB.sprite.global_bounds, objA.sprite.global_bounds):
+            objA.register_hit(objB)
+            objB.register_hit(objA)
+ 
   px_shift += dt * px_speed
   background.update(dt, sf.Vector2(
     player.sprite.position.x, player.sprite.position.y + px_shift
   ))
 
-  for obj in objects:
-    if obj.is_dead:
-      objects.remove(obj)
-    obj.update(dt)
-
-  
+  # DRAW  
   window.clear()
   window.draw(background)
-  window.draw(ufo1)
-  window.draw(player)
-  
+
   for obj in objects:
     window.draw(obj)
 
@@ -114,9 +137,8 @@ while window.is_open:
     bars[i].position = (bars[i].position.x, int(y_base_pos - t * 0.02))
     bars[i].size = (bars[i].size.x, t * 0.02)
 
-  for bar in bars:
-    #print(bar.position.y)
-    window.draw(bar)
+  #for bar in bars:
+  #  window.draw(bar)
   
   window.display()
   dt = clock.restart().microseconds
